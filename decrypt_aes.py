@@ -3,6 +3,8 @@ from crypto_functions import hex_to_ascii, ascii_to_hex, strxor
 
 import math
 
+def aes_ctr_encrypt(key, plaintext, block_size=16):
+    pass
 
 def aes_ctr_decrypt(key, ciphertext, block_size=16):
     """
@@ -28,6 +30,8 @@ def aes_ctr_decrypt(key, ciphertext, block_size=16):
 
     return ''.join(message_blocks)
 
+def aes_cbc_encrypt(key, plaintext, block_size=16):
+    pass
 
 def aes_cbc_decrypt(key, ciphertext, block_size=16):
     """
