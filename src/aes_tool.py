@@ -125,7 +125,7 @@ if __name__ == '__main__':
 
     import argparse
 
-    parser = argparse.ArgumentParser(description='Encrypt or Decrypt using the AES encryption scheme.')
+    parser = argparse.ArgumentParser(description='Encrypt or Decrypt using the AES cipher.')
     parser.add_argument('--key', '-k', required=True, help='The key to use to perform the encryption or decryption.')
     parser.add_argument('--text', '-t', required=True, help='The plaintext or ciphertext to use the AES algorithm on.')
     parser.add_argument('--block-size', '-b', default=16, choices=(16, 32, 64), help='The size of the blocks to make use of.')
