@@ -21,7 +21,7 @@ def _pad(text, block_size):
 
 
 def aes_ctr_encrypt(key, plaintext, block_size=16):
-    pass
+    raise NotImplementedError()
 
 
 def aes_ctr_decrypt(key, ciphertext, block_size=16):
@@ -117,9 +117,11 @@ def aes_cbc_decrypt(key, ciphertext, block_size=16):
 if __name__ == '__main__':
     # Run Test Suite to ensure Integrity of code
     # Ensure the padding algorithm works as expected
-    assert _pad('This is 16 bytes', 16) == 'This is 16 bytes' + (chr(16) * 16)   # 16 bytes
-    assert _pad('This is more than 16 bytes', 16) == 'This is more than 16 bytes' + (chr(6) * 6)    # 26 bytes
-    assert _pad('less than 16', 16) == 'less than 16' + (chr(4) * 4)    # 12 bytes
+    TEST_TEXT = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt'
+
+    assert _pad(TEST_TEXT[:16], 16) == TEST_TEXT[:16] + (chr(16) * 16)   # 16 bytes
+    assert _pad(TEST_TEXT[:26], 16) == TEST_TEXT[:26] + (chr(6) * 6)    # 26 bytes
+    assert _pad(TEST_TEXT[:12], 16) == TEST_TEXT[:12] + (chr(4) * 4)    # 12 bytes
 
     # ============================================== #
 
@@ -128,13 +130,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Encrypt or Decrypt using the AES cipher.')
     parser.add_argument('--key', '-k', required=True, help='The key to use to perform the encryption or decryption.')
     parser.add_argument('--text', '-t', required=True, help='The plaintext or ciphertext to use the AES algorithm on.')
-    parser.add_argument('--block-size', '-b', default=16, choices=(16, 32, 64), help='The size of the blocks to make use of.')
+    parser.add_argument('--block-size', '-b', default=16, choices=(16, 32, 64), help='The size of the blocks to make use of in bytes.')
     parser.add_argument('--mode', '-m', default='encrypt', choices=('encrypt', 'decrypt'), help='Specify whether the tool will decrypt or encrypt the input text.')
 
     args = parser.parse_args()
 
     if args.mode == 'encrypt':
-        # Print out the given plaintext with the specified key
         print aes_cbc_encrypt(args.key, args.text, args.block_size).encode('hex')
     else:
         print aes_cbc_encrypt(args.key, hex('0x' + args.text.decode('hex')), args.block_size)
