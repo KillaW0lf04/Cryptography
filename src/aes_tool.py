@@ -117,12 +117,9 @@ def aes_cbc_decrypt(key, ciphertext, block_size=16):
 if __name__ == '__main__':
     # Run Test Suite to ensure Integrity of code
     # Ensure the padding algorithm works as expected
-    for i in xrange(0, 16):
-        pad_count = 16 - i
-        if pad_count == 0:
-            pad_count = 16
-
-        assert _pad('This is 16 bytes' + '#' * i, 16) == 'This is 16 bytes' + ('#' * i) + (chr(pad_count) * pad_count)
+    assert _pad('This is 16 bytes', 16) == 'This is 16 bytes' + (chr(16) * 16)   # 16 bytes
+    assert _pad('This is more than 16 bytes', 16) == 'This is more than 16 bytes' + (chr(6) * 6)    # 26 bytes
+    assert _pad('less than 16', 16) == 'less than 16' + (chr(4) * 4)    # 12 bytes
 
     # ============================================== #
 
