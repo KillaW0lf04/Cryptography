@@ -1,3 +1,6 @@
+# Pycharm Stuff
+.idea
+
 *.py[cod]
 
 # C extensions
