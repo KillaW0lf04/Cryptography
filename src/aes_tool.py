@@ -5,7 +5,7 @@ My attempt at writing some cryptographic block ciphers for many time key use. Ma
 of PyCrypto - specifically the AES functionality.
 
 SPOILER: I am aware i should not be implementing ciphers myself for use in production - this code is
-my way of learning how the inner workings of certain cipher structures work.
+my way of learning how to use PyCrypto and how the inner workings of certain cipher structures work.
 
 Please do not rely on the security of this code for use in production!
 """
@@ -33,7 +33,28 @@ def _pad(text, block_size):
 
 
 def aes_ctr_encrypt(key, plaintext, block_size=16):
-    raise NotImplementedError()
+    """
+    Encrypts the given plaintext with AES with counter mode
+    as a mode of operation. Uses a block size of 16 by default if
+    not specified in the parameters.
+    """
+    cipher = AES.new(key)
+    
+    no_of_blocks = int(math.ceil(len(plaintext) / float(block_size)))
+    cipher_blocks = []
+    
+    # Generate the IV from urandom
+    IV = ascii_to_hex(os.urandom(16))
+    
+    for i in xrange(0, no_of_blocks):
+        # No padding needed
+        m = plaintext[i * block_size: (i + 1) * block_size]
+        chain = cipher.encrypt(hex_to_ascii(IV + i))
+        
+        cipher_blocks.append(strxor(chain, m))
+        
+    # Return IV appended to the generated cipher blocks
+    return hex_to_ascii(IV) + ''.join(cipher_blocks)
 
 
 def aes_ctr_decrypt(key, ciphertext, block_size=16):
@@ -72,7 +93,7 @@ def aes_cbc_encrypt(key, plaintext, block_size=16):
 
     # Calculate the number of blocks required
     no_of_blocks = int(math.ceil(len(plaintext) / float(block_size)))
-    cipherblocks = []
+    cipher_blocks = []
 
     # Pad the plaintext as is necessary
     plaintext = _pad(plaintext, block_size)
@@ -89,10 +110,10 @@ def aes_cbc_encrypt(key, plaintext, block_size=16):
         ct = cipher.encrypt(block)
         prev = ct
 
-        cipherblocks.append(ct)
+        cipher_blocks.append(ct)
 
-    # Return IV appended with the cipherblocks
-    return IV + ''.join(cipherblocks)
+    # Return IV appended with the cipher blocks
+    return IV + ''.join(cipher_blocks)
 
 
 def aes_cbc_decrypt(key, ciphertext, block_size=16):
@@ -131,14 +152,14 @@ if __name__ == '__main__':
     # Ensure the padding algorithm works as expected
     TEST_TEXT = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt'
 
-    assert _pad(TEST_TEXT[:16], 16) == TEST_TEXT[:16] + (chr(16) * 16)   # 16 bytes
+    assert _pad(TEST_TEXT[:16], 16) == TEST_TEXT[:16] + (chr(16) * 16)    # 16 bytes
     assert _pad(TEST_TEXT[:26], 16) == TEST_TEXT[:26] + (chr(6) * 6)    # 26 bytes
     assert _pad(TEST_TEXT[:12], 16) == TEST_TEXT[:12] + (chr(4) * 4)    # 12 bytes
 
     # Ensure Integrity of message is maintained when encrypting and decrypting
     KEY = 'Password10234125'
     assert aes_cbc_decrypt(KEY, aes_cbc_encrypt(KEY, TEST_TEXT)) == TEST_TEXT
-    # assert aes_ctr_decrypt(KEY, aes_ctr_encrypt(KEY, TEST_TEXT)) == TEST_TEXT   # Will currently fail
+    assert aes_ctr_decrypt(KEY, aes_ctr_encrypt(KEY, TEST_TEXT)) == TEST_TEXT   # Will currently fail
 
     # ============================================== #
 
