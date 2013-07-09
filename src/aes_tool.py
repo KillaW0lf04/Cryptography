@@ -1,5 +1,15 @@
 __author__ = 'Michael Aquilina'
 
+__desc__ = """
+My attempt at writing some cryptographic block ciphers for many time key use. Makes use
+of PyCrypto - specifically the AES functionality.
+
+SPOILER: I am aware i should not be implementing ciphers myself for use in production - this code is
+my way of learning how the inner workings of certain cipher structures work.
+
+Please do not rely on the security of this code for use in production!
+"""
+
 from Crypto.Cipher import AES
 from crypto_functions import hex_to_ascii, ascii_to_hex, strxor
 
