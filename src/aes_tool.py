@@ -159,7 +159,7 @@ if __name__ == '__main__':
     # Ensure Integrity of message is maintained when encrypting and decrypting
     KEY = 'Password10234125'
     assert aes_cbc_decrypt(KEY, aes_cbc_encrypt(KEY, TEST_TEXT)) == TEST_TEXT
-    assert aes_ctr_decrypt(KEY, aes_ctr_encrypt(KEY, TEST_TEXT)) == TEST_TEXT   # Will currently fail
+    assert aes_ctr_decrypt(KEY, aes_ctr_encrypt(KEY, TEST_TEXT)) == TEST_TEXT
 
     # ============================================== #
 
