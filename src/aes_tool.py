@@ -1,3 +1,5 @@
+__author__ = 'Michael Aquilina'
+
 from Crypto.Cipher import AES
 from crypto_functions import hex_to_ascii, ascii_to_hex, strxor
 
@@ -122,6 +124,11 @@ if __name__ == '__main__':
     assert _pad(TEST_TEXT[:16], 16) == TEST_TEXT[:16] + (chr(16) * 16)   # 16 bytes
     assert _pad(TEST_TEXT[:26], 16) == TEST_TEXT[:26] + (chr(6) * 6)    # 26 bytes
     assert _pad(TEST_TEXT[:12], 16) == TEST_TEXT[:12] + (chr(4) * 4)    # 12 bytes
+
+    # Ensure Integrity of message is maintained when encrypting and decrypting
+    KEY = 'Password10234125'
+    assert aes_cbc_decrypt(KEY, aes_cbc_encrypt(KEY, TEST_TEXT)) == TEST_TEXT
+    # assert aes_ctr_decrypt(KEY, aes_ctr_encrypt(KEY, TEST_TEXT)) == TEST_TEXT   # Will currently fail
 
     # ============================================== #
 
