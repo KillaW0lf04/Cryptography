@@ -1,6 +1,9 @@
 # Pycharm Stuff
 .idea
 
+# Eclipse Stuff
+.metadata
+
 *.py[cod]
 
 # C extensions
