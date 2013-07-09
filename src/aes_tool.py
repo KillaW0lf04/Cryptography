@@ -169,11 +169,17 @@ if __name__ == '__main__':
     parser.add_argument('--key', '-k', required=True, help='The key to use to perform the encryption or decryption.')
     parser.add_argument('--text', '-t', required=True, help='The plaintext or ciphertext to use the AES algorithm on.')
     parser.add_argument('--block-size', '-b', default=16, choices=(16, 32, 64), help='The size of the blocks to make use of in bytes.')
-    parser.add_argument('--mode', '-m', default='encrypt', choices=('encrypt', 'decrypt'), help='Specify whether the tool will decrypt or encrypt the input text.')
+    parser.add_argument('--operation', '-o', default='encrypt', choices=('encrypt', 'decrypt'), help='Specify whether the tool will decrypt or encrypt the input text.')
+    parser.add_argument('--mode', '-m', default='ctr', choices=('cbc', 'ctr'), help='Specify the mode of operation. Either CBC or CTR.')
 
     args = parser.parse_args()
 
-    if args.mode == 'encrypt':
-        print aes_cbc_encrypt(args.key, args.text, args.block_size).encode('hex')
+    mode_pairs = {
+        'ctr': (aes_ctr_encrypt, aes_ctr_decrypt),
+        'cbc': (aes_cbc_encrypt, aes_cbc_decrypt),
+    }
+
+    if args.operation == 'encrypt':
+        print mode_pairs[args.mode][0](args.key, args.text, args.block_size).encode('hex')
     else:
-        print aes_cbc_encrypt(args.key, hex('0x' + args.text.decode('hex')), args.block_size)
+        print mode_pairs[args.mode][1](args.key, hex('0x' + args.text.decode('hex')), args.block_size)
