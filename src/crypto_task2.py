@@ -10,8 +10,6 @@ from crypto_functions import strxor, hex_to_ascii
 y1 = hex_to_ascii(0x22222222222222222222222222222222)    # Some random value for y1
 x1 = hex_to_ascii(0x11111111111111111111111111111111)    # Some random value for x1
 
-print '(x1, y1) = %s, %s' % (x1, y1)
-
 cipher = AES.new(y1)
 
 z = cipher.encrypt(x1)
