@@ -149,6 +149,8 @@ def aes_cbc_decrypt(key, ciphertext, block_size=16):
 
 if __name__ == '__main__':
     # Run Test Suite to ensure Integrity of code
+    # ============================================== #
+
     # Ensure the padding algorithm works as expected
     TEST_TEXT = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt'
 
@@ -157,29 +159,49 @@ if __name__ == '__main__':
     assert _pad(TEST_TEXT[:12], 16) == TEST_TEXT[:12] + (chr(4) * 4)    # 12 bytes
 
     # Ensure Integrity of message is maintained when encrypting and decrypting
-    KEY = 'Password10234125'
-    assert aes_cbc_decrypt(KEY, aes_cbc_encrypt(KEY, TEST_TEXT)) == TEST_TEXT
-    assert aes_ctr_decrypt(KEY, aes_ctr_encrypt(KEY, TEST_TEXT)) == TEST_TEXT
+    TEST_KEY = os.urandom(16)
+    assert aes_cbc_decrypt(TEST_KEY, aes_cbc_encrypt(TEST_KEY, TEST_TEXT)) == TEST_TEXT
+    assert aes_ctr_decrypt(TEST_KEY, aes_ctr_encrypt(TEST_KEY, TEST_TEXT)) == TEST_TEXT
 
     # ============================================== #
 
     import argparse
 
     parser = argparse.ArgumentParser(description='Encrypt or Decrypt using the AES cipher.')
-    parser.add_argument('--key', '-k', required=True, help='The key to use to perform the encryption or decryption.')
-    parser.add_argument('--text', '-t', required=True, help='The plaintext or ciphertext to use the AES algorithm on.')
-    parser.add_argument('--block-size', '-b', default=16, choices=(16, 32, 64), help='The size of the blocks to make use of in bytes.')
+    parser.add_argument('text', help='The plaintext or ciphertext to use the AES algorithm on. ASCII expected for encrypt mode and hex expected for decrypt.')
+    parser.add_argument('--key', default=None, help='Specify the key to decrypt some input text with. Not used for encryption.')
+    parser.add_argument('--block-size', '-b', type=int, default=16, choices=(16, 32, 64), help='The size of the blocks to make use of in bytes.')
     parser.add_argument('--operation', '-o', default='encrypt', choices=('encrypt', 'decrypt'), help='Specify whether the tool will decrypt or encrypt the input text.')
     parser.add_argument('--mode', '-m', default='ctr', choices=('cbc', 'ctr'), help='Specify the mode of operation. Either CBC or CTR.')
 
     args = parser.parse_args()
 
+    # Pairs specifying modes of operation
     mode_pairs = {
         'ctr': (aes_ctr_encrypt, aes_ctr_decrypt),
         'cbc': (aes_cbc_encrypt, aes_cbc_decrypt),
     }
 
     if args.operation == 'encrypt':
-        print mode_pairs[args.mode][0](args.key, args.text, args.block_size).encode('hex')
+        key = os.urandom(args.block_size)   # Generate a key for the user
+
+        print 'I have generated a random key for you which was used to encode the text given.'
+        print
+        print 'KEY: 0x%s' % key.encode('hex')
+        print 'CIPHERTEXT: 0x%s' % mode_pairs[args.mode][0](key, args.text, args.block_size).encode('hex')
     else:
-        print mode_pairs[args.mode][1](args.key, hex('0x' + args.text.decode('hex')), args.block_size)
+        # TODO: Needs bug fixing
+
+        if args.key is None:
+            print 'You need to specify the key to decode the ciphertext with using the --key switch.'
+        else:
+            if args.key.startswith('0x'):
+                args.key = args.key[2:]
+
+            if args.key.startswith('0x'):
+                args.text = args.text[2:]
+
+            key = args.key.decode('hex')
+            ciphertext = args.text.decode('hex')
+
+            print 'PLAINTEXT: %s' % mode_pairs[args.mode][1](key, ciphertext, args.block_size)
