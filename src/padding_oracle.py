@@ -1,3 +1,14 @@
+"""
+Solution i used to solve a cryptography assignment for a course i took.
+
+Takes a website which is vulnerable to padding oracle attacks and reveals
+some target ciphertext by using said attack.
+
+KNOWN BUG: when guessing the last message block, it will not be able to
+distinguish padding as a correct guess. This has to be manually set in
+known_message_blocks to work. e.g. 04040404 will be counted as an incorrect guess.
+"""
+
 import urllib2
 import math
 import sys
@@ -33,7 +44,6 @@ def perform_request(argument):
     argument = argument.encode('hex')
 
     try:
-        # print 'Requesting: %s' % (TARGET + argument)
         urllib2.urlopen(TARGET + argument)
     except urllib2.HTTPError as e:
         if e.code == 404:   # Not Found = valid pad, invalid MAC
@@ -46,24 +56,33 @@ def perform_request(argument):
         return VALID
 
 
-def perform_padding_attack(block_list, attack_block_index, block_size):
+def perform_padding_attack(block_list, attack_block_index, block_size, known_message_info=None):
     attack_block = block_list[attack_block_index]
 
-    message_block = chr(0) * block_size
+    # If no known information is available, start from the beginning
+    if known_message_info is None:
+        message_block = chr(0) * block_size
+    else:
+        message_block = known_message_info
 
-    for padding_index in xrange(1, block_size):
+    for padding_index in xrange(1, block_size + 1):
         pad_value = chr(0) * (block_size - padding_index) + chr(padding_index) * padding_index
-        print 'PAD VALUE: %s' % pad_value.encode('hex')
+
+        char_index = block_size - padding_index
+        if message_block[char_index] != chr(0):
+            continue
+        else:
+            print 'PAD VALUE: %s' % pad_value.encode('hex')
 
         # Perform 1 of 256 guesses
         for guess in xrange(256):
-            guess_value = chr(0) * (block_size - padding_index) + chr(guess) + message_block[block_size - padding_index + 1:]
-            # print guess_value.encode('hex')
+            guess_value = chr(0) * char_index + chr(guess) + message_block[char_index + 1:]
 
             # Calculate the new value for the attack block
-            block_value = strxor(pad_value, guess_value)
-            block_value = strxor(block_value, attack_block)
+            attack_hex = strxor(pad_value, guess_value)
+            block_value = strxor(attack_hex, attack_block)
 
+            # Generate the output ciphertext block with the altered attack block
             output_blocks = block_list[:attack_block_index] + [block_value, block_list[attack_block_index + 1]]
             output = ''.join(output_blocks)
 
@@ -77,10 +96,11 @@ def perform_padding_attack(block_list, attack_block_index, block_size):
             else:
                 result_text = 'UNKNOWN ERROR'
 
-            print 'Guess=%s, PadIndex=%s, Result=%s, GuessHex=%s' % (guess, padding_index, result_text, guess_value.encode('hex'))
+            print 'Guess=%s, PadIndex=%s, Result=%s, GuessHex=%s, MessageState=\'%s\'' % \
+                  (guess, padding_index, result_text, guess_value.encode('hex'), message_block)
             if result == INVALID_MAC:
                 message_block = guess_value
-                print 'Guess %s was correct. Current message=%s (hex: %s)' % (guess, message_block, message_block.encode('hex'))
+                print 'Guess %s was correct. Current message=\'%s\' (hex: %s)' % (guess, message_block, message_block.encode('hex'))
                 break
 
             if guess == 255:
@@ -88,11 +108,17 @@ def perform_padding_attack(block_list, attack_block_index, block_size):
                 print 'Contents of message: %s (hex: %s)' % (message_block, message_block.encode('hex'))
                 sys.exit(1)
 
-    print message_block
+    return message_block
 
 
 if __name__ == '__main__':
     import os
+
+    # Blocks of known information that can be skipped
+    # Organise by block_index and known text (16 chars per block)
+    # E.g. {1: 'This is text one', 2: chr(0) * 9 + ' seven '}
+    # Where chr(0) is content in the block which has yet to be guessed
+    known_message_blocks = {}
 
     # Ciphertext with which to perform the attack
     CT = hex_to_ascii(0xf20bdba6ff29eed7b046d1df9fb7000058b1ffb4210a580f748b4ac714c001bd4a61044426fb515dad3f21f18aa577c0bdf302936266926ff37dbf7035d5eeb4)
@@ -118,6 +144,16 @@ if __name__ == '__main__':
     print 'blocks = %s' % blocks
 
     # Iterate through block list backwards
-    for block_index in xrange(len(blocks)):
-        attack_block_index = -1 * (block_index + 1)
-        perform_padding_attack(blocks, attack_block_index, BLOCK_SIZE)
+    for block_index in xrange(0, len(blocks) - 1):
+        attack_block_index = block_index
+
+        known_message_info = known_message_blocks.get(block_index, None)
+        known_message_blocks[block_index] = perform_padding_attack(blocks, attack_block_index, BLOCK_SIZE, known_message_info=known_message_info)
+
+        print known_message_blocks[block_index]
+
+    # Generate the final result from the known message blocks
+    result = ''.join(known_message_blocks.values())
+    result = result.rstrip(result[-1:])  # Remove the padding bytes
+
+    print 'BROKEN CIPHERTEXT: \'%s\'' % result
