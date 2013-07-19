@@ -57,6 +57,13 @@ def perform_request(argument):
 
 
 def perform_padding_attack(block_list, attack_block_index, block_size, known_message_info=None):
+    """
+    Performs the actual padding oracle attack using some specified block as the block to be altered.
+    The block should be specified by stating its index in the block_list passed. Any known plain text
+    message information can be passed in the form of a string if known. Unknown characters should be
+    specified as 0 valued charcters (i.e. chr(0)). If no known message information is passed, the
+    algorithm will start from the beginning i.e. known_message_info = chr(0) * block_size.
+    """
     attack_block = block_list[attack_block_index]
 
     # If no known information is available, start from the beginning
@@ -143,7 +150,7 @@ if __name__ == '__main__':
     blocks = split_into_blocks(CT, BLOCK_SIZE)
     print 'blocks = %s' % blocks
 
-    # Iterate through block list backwards
+    # Iterate through block list
     for block_index in xrange(0, len(blocks) - 1):
         attack_block_index = block_index
 
