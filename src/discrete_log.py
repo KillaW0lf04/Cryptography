@@ -18,7 +18,7 @@ print 'Building Hash Table'
 t0 = time.time()
 
 # Equation h/g**x1
-for x1 in xrange(1, 2**20):
+for x1 in xrange(1, B):
     temp = gmpy2.powmod(g, x1, p)
     temp = gmpy2.div(h, temp)
     print temp
@@ -32,7 +32,7 @@ print 'Comparing results to hash table'
 t0 = time.time()
 
 # Equation (g**B)**x0
-for x0 in xrange(1, 2**20):
+for x0 in xrange(1, B):
     value = gmpy2.powmod(gB, x0, p)
 
     if value in hash_list_eq1:
